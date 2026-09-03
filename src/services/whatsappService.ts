@@ -17,7 +17,39 @@ export class WhatsAppService {
   }
 
   /**
-   * Generates a Facebook share dialog URL for the item.
+   * Formats a clean, ready-to-paste announcement for Facebook Groups.
+   * Solves Meta's restriction by giving neighbors a 1-click copy with live claim link.
+   */
+  static formatFacebookPostText(item: Item, appBaseUrl = window.location.origin): string {
+    const itemUrl = `${appBaseUrl}/?item=${item.id}`;
+    return (
+      `🎁 Giving: ${item.title}\n\n` +
+      `📍 Location: ${item.neighborhood} (${item.distance})\n` +
+      `📝 Condition: ${item.description}\n\n` +
+      `👉 To claim or check if still available, click here:\n${itemUrl}`
+    );
+  }
+
+  /**
+   * 1-Click Copy formatted post and open the neighborhood's Facebook Group.
+   */
+  static async copyAndOpenFacebookGroup(
+    item: Item,
+    groupUrl = 'https://www.facebook.com/groups/feed/',
+    appBaseUrl = window.location.origin
+  ): Promise<boolean> {
+    const text = this.formatFacebookPostText(item, appBaseUrl);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // fallback if clipboard api is restricted
+    }
+    window.open(groupUrl, '_blank', 'noopener,noreferrer');
+    return true;
+  }
+
+  /**
+   * Generates standard Facebook web share dialog URL for the item link.
    */
   static getFacebookShareUrl(item: Item, appBaseUrl = window.location.origin): string {
     const itemUrl = encodeURIComponent(`${appBaseUrl}/?item=${item.id}`);

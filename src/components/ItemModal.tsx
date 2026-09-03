@@ -58,6 +58,13 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   const [instructions, setInstructions] = useState(
     item.pickupDetails?.instructions || 'Item is on the porch to the right of the front door.'
   );
+  const [fbCopied, setFbCopied] = useState(false);
+
+  const handlePostToFacebook = async () => {
+    await WhatsAppService.copyAndOpenFacebookGroup(item, currentUser.facebookGroupUrl);
+    setFbCopied(true);
+    setTimeout(() => setFbCopied(false), 3500);
+  };
 
   const handleSendRequest = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,17 +162,25 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                   >
                     <span>WhatsApp</span>
                   </a>
-                  <a
-                    href={WhatsAppService.getFacebookShareUrl(item)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
-                    title="Share listing to Facebook Group"
+                  <button
+                    onClick={handlePostToFacebook}
+                    className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all cursor-pointer ${
+                      fbCopied
+                        ? 'bg-blue-600 text-white border border-blue-600'
+                        : 'text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                    }`}
+                    title="1-Click: Copies post to clipboard and opens Facebook Group"
                   >
-                    <span>Facebook</span>
-                  </a>
+                    <span>{fbCopied ? 'Copied! Opening Group...' : 'Facebook Group'}</span>
+                  </button>
                 </div>
               </div>
+
+              {fbCopied && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-900 leading-snug animate-in fade-in">
+                  ✓ Post text copied to your clipboard! Paste (<strong>Ctrl+V</strong>) into your Facebook Group.
+                </div>
+              )}
             </div>
           </div>
 

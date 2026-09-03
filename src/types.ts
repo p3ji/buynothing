@@ -22,6 +22,7 @@ export interface User {
     street: string;
     instructions: string;
   };
+  facebookGroupUrl?: string;
   notificationPreferences: NotificationPreferences;
 }
 

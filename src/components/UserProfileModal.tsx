@@ -37,6 +37,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [smsAlerts, setSmsAlerts] = useState(
     currentUser.notificationPreferences.smsPickupAlerts
   );
+  const [facebookGroupUrl, setFacebookGroupUrl] = useState(
+    currentUser.facebookGroupUrl || 'https://www.facebook.com/groups/feed/'
+  );
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSaveAddress = (e: React.FormEvent) => {
@@ -47,6 +50,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         street: streetAddress,
         instructions,
       },
+      facebookGroupUrl: facebookGroupUrl.trim() || 'https://www.facebook.com/groups/feed/',
       notificationPreferences: {
         ...currentUser.notificationPreferences,
         smsPickupAlerts: smsAlerts,
@@ -227,6 +231,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   placeholder="e.g. Item is under the covered porch by the red door. No need to ring doorbell."
                   className="w-full text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1">
+                  Local Facebook Group Link (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={facebookGroupUrl}
+                  onChange={(e) => setFacebookGroupUrl(e.target.value)}
+                  placeholder="e.g. https://www.facebook.com/groups/maplewoodbuynothing"
+                  className="w-full text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  When you click "Facebook Group" on an item, this exact group opens in a new tab.
+                </p>
               </div>
 
               {/* Notification preferences */}
