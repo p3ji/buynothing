@@ -10,11 +10,27 @@ import { DirectMessageSheet } from './components/DirectMessageSheet';
 import { PostItemModal } from './components/PostItemModal';
 import { MyPickupsDrawer } from './components/MyPickupsDrawer';
 import { UserProfileModal } from './components/UserProfileModal';
+import { NewProfileModal } from './components/NewProfileModal';
 import { Sparkles, Play, CheckCircle2 } from 'lucide-react';
 
 export function App() {
   const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
-  const [currentUser, setCurrentUser] = useState<User>(CURRENT_USERS[0]);
+
+  // Community users: seeded with Sarah, Dave, Elena, and persisted for new neighbors
+  const [allUsers, setAllUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('buynothing_users_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return CURRENT_USERS;
+  });
+
+  const [currentUser, setCurrentUser] = useState<User>(() => allUsers[0] || CURRENT_USERS[0]);
   const [currentTab, setCurrentTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -25,6 +41,7 @@ export function App() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isMyPickupsOpen, setIsMyPickupsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNewProfileOpen, setIsNewProfileOpen] = useState(false);
   const [simLog, setSimLog] = useState<string | null>(null);
 
   // Synchronize modal references
@@ -231,6 +248,16 @@ export function App() {
 
   const handleUpdateUser = (updatedUser: User) => {
     setCurrentUser(updatedUser);
+    const updated = allUsers.map((u) => (u.id === updatedUser.id ? updatedUser : u));
+    setAllUsers(updated);
+    localStorage.setItem('buynothing_users_v1', JSON.stringify(updated));
+  };
+
+  const handleCreateUser = (newUser: User) => {
+    const updated = [newUser, ...allUsers];
+    setAllUsers(updated);
+    setCurrentUser(newUser);
+    localStorage.setItem('buynothing_users_v1', JSON.stringify(updated));
   };
 
   // Run live in-browser UX Simulation
@@ -277,11 +304,12 @@ export function App() {
       {/* Top Navbar without AI slop */}
       <Navbar
         currentUser={currentUser}
-        allUsers={CURRENT_USERS}
+        allUsers={allUsers}
         onSelectUser={setCurrentUser}
         onOpenPostModal={() => setIsPostModalOpen(true)}
         onOpenMyMessages={() => setIsMyPickupsOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
+        onOpenNewProfileModal={() => setIsNewProfileOpen(true)}
         unreadCount={unreadCount}
       />
 
@@ -406,10 +434,19 @@ export function App() {
       {isProfileOpen && (
         <UserProfileModal
           currentUser={currentUser}
-          allUsers={CURRENT_USERS}
+          allUsers={allUsers}
           onClose={() => setIsProfileOpen(false)}
           onUpdateUser={handleUpdateUser}
           onSelectUser={setCurrentUser}
+          onOpenNewProfileModal={() => setIsNewProfileOpen(true)}
+        />
+      )}
+
+      {/* Set Up New Neighbor Profile Modal */}
+      {isNewProfileOpen && (
+        <NewProfileModal
+          onClose={() => setIsNewProfileOpen(false)}
+          onCreateUser={handleCreateUser}
         />
       )}
     </div>

@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenPostModal: () => void;
   onOpenMyMessages: () => void;
   onOpenProfile: () => void;
+  onOpenNewProfileModal: () => void;
   unreadCount: number;
 }
 
@@ -19,6 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenPostModal,
   onOpenMyMessages,
   onOpenProfile,
+  onOpenNewProfileModal,
   unreadCount,
 }) => {
   return (
@@ -42,13 +44,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Persona Switcher for testing */}
+          {/* Quick Persona Switcher & New Profile Trigger */}
           <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
             <select
               value={currentUser.id}
               onChange={(e) => {
-                const selected = allUsers.find((u) => u.id === e.target.value);
-                if (selected) onSelectUser(selected);
+                if (e.target.value === '__new__') {
+                  onOpenNewProfileModal();
+                } else {
+                  const selected = allUsers.find((u) => u.id === e.target.value);
+                  if (selected) onSelectUser(selected);
+                }
               }}
               aria-label="Switch active user"
               className="bg-white text-xs font-medium text-slate-800 py-1 px-2.5 rounded-md border border-slate-300 shadow-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
@@ -58,7 +64,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {user.name} ({user.id === 'user-sarah' ? 'Giver' : 'Neighbor'})
                 </option>
               ))}
+              <option value="__new__">+ New Neighbor Profile...</option>
             </select>
+
+            <button
+              onClick={onOpenNewProfileModal}
+              className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded bg-white hover:bg-emerald-50 border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+              title="Set up a new profile"
+            >
+              + Join
+            </button>
           </div>
 
           {/* Messages & Pickups Button */}

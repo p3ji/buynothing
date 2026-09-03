@@ -16,6 +16,7 @@ interface UserProfileModalProps {
   onClose: () => void;
   onUpdateUser: (updatedUser: User) => void;
   onSelectUser: (user: User) => void;
+  onOpenNewProfileModal: () => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
@@ -24,6 +25,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   onClose,
   onUpdateUser,
   onSelectUser,
+  onOpenNewProfileModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'switch'>('profile');
   const [streetAddress, setStreetAddress] = useState(
@@ -269,9 +271,20 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
           {activeTab === 'switch' && (
             <div className="space-y-3">
-              <p className="text-xs text-slate-600">
-                Switch profiles to test how different neighbors view the app and coordinate pickups:
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-slate-600">
+                  Switch profiles or join as a new neighbor:
+                </p>
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenNewProfileModal();
+                  }}
+                  className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  + New Profile
+                </button>
+              </div>
               <div className="space-y-2">
                 {allUsers.map((user) => (
                   <div
