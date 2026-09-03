@@ -4,14 +4,14 @@ import { MapPin, Users, Clock, CheckCircle2, MessageCircle } from 'lucide-react'
 
 interface ItemCardProps {
   item: Item;
-  currentUser: User;
+  currentUser: User | null;
   onOpenItem: (item: Item) => void;
 }
 
 export const ItemCard: React.FC<ItemCardProps> = ({ item, currentUser, onOpenItem }) => {
-  const isGiver = item.giverId === currentUser.id;
-  const hasRequested = item.requests.some((r) => r.userId === currentUser.id);
-  const isSelected = item.selectedRequesterId === currentUser.id;
+  const isGiver = currentUser ? item.giverId === currentUser.id : false;
+  const hasRequested = currentUser ? item.requests.some((r) => r.userId === currentUser.id) : false;
+  const isSelected = currentUser ? item.selectedRequesterId === currentUser.id : false;
 
   return (
     <div

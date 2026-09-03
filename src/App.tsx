@@ -11,6 +11,7 @@ import { PostItemModal } from './components/PostItemModal';
 import { MyPickupsDrawer } from './components/MyPickupsDrawer';
 import { UserProfileModal } from './components/UserProfileModal';
 import { NewProfileModal } from './components/NewProfileModal';
+import { LoginModal } from './components/LoginModal';
 import { Sparkles, Play, CheckCircle2 } from 'lucide-react';
 
 export function App() {
@@ -30,7 +31,11 @@ export function App() {
     return CURRENT_USERS;
   });
 
-  const [currentUser, setCurrentUser] = useState<User>(() => allUsers[0] || CURRENT_USERS[0]);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const isLoggedOut = localStorage.getItem('buynothing_logged_out');
+    if (isLoggedOut === 'true') return null;
+    return allUsers[0] || CURRENT_USERS[0];
+  });
   const [currentTab, setCurrentTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -42,6 +47,8 @@ export function App() {
   const [isMyPickupsOpen, setIsMyPickupsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNewProfileOpen, setIsNewProfileOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [loginMessage, setLoginMessage] = useState<string | undefined>();
   const [simLog, setSimLog] = useState<string | null>(null);
 
   // Synchronize modal references
@@ -53,11 +60,13 @@ export function App() {
   const unclaimedCount = items.filter((i) => i.status === 'available' && i.daysOld >= 2).length;
 
   // Unread/Action notification count
-  const unreadCount = items.filter((i) => {
-    if (i.giverId === currentUser.id && i.requests.length > 0 && i.status === 'available') return true;
-    if (i.selectedRequesterId === currentUser.id && i.status === 'pending') return true;
-    return false;
-  }).length;
+  const unreadCount = currentUser
+    ? items.filter((i) => {
+        if (i.giverId === currentUser.id && i.requests.length > 0 && i.status === 'available') return true;
+        if (i.selectedRequesterId === currentUser.id && i.status === 'pending') return true;
+        return false;
+      }).length
+    : 0;
 
   // Filter items
   const filteredItems = items.filter((item) => {
@@ -67,6 +76,7 @@ export function App() {
     }
     if (currentTab === 'pending' && item.status !== 'pending') return false;
     if (currentTab === 'mine') {
+      if (!currentUser) return false;
       const isMine =
         item.giverId === currentUser.id || item.requests.some((r) => r.userId === currentUser.id);
       if (!isMine) return false;
@@ -89,6 +99,11 @@ export function App() {
 
   // Handlers
   const handleRequestItem = (itemId: string, proposedTime: string, note: string) => {
+    if (!currentUser) {
+      handleOpenLoginModal("Sign in or create an account to request this item.");
+      return;
+    }
+
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
@@ -150,6 +165,8 @@ export function App() {
   };
 
   const handleShareAddress = (itemId: string, address: string, instructions: string) => {
+    if (!currentUser) return;
+
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
@@ -205,6 +222,8 @@ export function App() {
   };
 
   const handleSendMessage = (itemId: string, text: string) => {
+    if (!currentUser) return;
+
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
@@ -224,6 +243,11 @@ export function App() {
   };
 
   const handlePostItem = (newItemData: Partial<Item>) => {
+    if (!currentUser) {
+      handleOpenLoginModal("Sign in or join the neighborhood to give an item.");
+      return;
+    }
+
     const newItem: Item = {
       id: `item-${Date.now()}`,
       title: newItemData.title || 'Untitled Item',
@@ -257,7 +281,24 @@ export function App() {
     const updated = [newUser, ...allUsers];
     setAllUsers(updated);
     setCurrentUser(newUser);
+    localStorage.removeItem('buynothing_logged_out');
     localStorage.setItem('buynothing_users_v1', JSON.stringify(updated));
+  };
+
+  const handleSelectUser = (user: User) => {
+    setCurrentUser(user);
+    localStorage.removeItem('buynothing_logged_out');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.setItem('buynothing_logged_out', 'true');
+    setIsProfileOpen(false);
+  };
+
+  const handleOpenLoginModal = (message?: string) => {
+    setLoginMessage(message);
+    setIsLoginOpen(true);
   };
 
   // Run live in-browser UX Simulation
@@ -305,11 +346,24 @@ export function App() {
       <Navbar
         currentUser={currentUser}
         allUsers={allUsers}
-        onSelectUser={setCurrentUser}
-        onOpenPostModal={() => setIsPostModalOpen(true)}
-        onOpenMyMessages={() => setIsMyPickupsOpen(true)}
+        onSelectUser={handleSelectUser}
+        onOpenPostModal={() => {
+          if (!currentUser) {
+            handleOpenLoginModal("Please sign in or join to give an item to neighbors.");
+          } else {
+            setIsPostModalOpen(true);
+          }
+        }}
+        onOpenMyMessages={() => {
+          if (!currentUser) {
+            handleOpenLoginModal("Please sign in to check your messages and pickups.");
+          } else {
+            setIsMyPickupsOpen(true);
+          }
+        }}
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenNewProfileModal={() => setIsNewProfileOpen(true)}
+        onOpenLoginModal={() => handleOpenLoginModal()}
         unreadCount={unreadCount}
       />
 
@@ -395,11 +449,12 @@ export function App() {
             setActiveItem(null);
             setChatItem(item);
           }}
+          onOpenLoginModal={handleOpenLoginModal}
         />
       )}
 
       {/* Direct Messaging Drawer */}
-      {currentChatModalItem && (
+      {currentChatModalItem && currentUser && (
         <DirectMessageSheet
           item={currentChatModalItem}
           currentUser={currentUser}
@@ -411,7 +466,7 @@ export function App() {
       )}
 
       {/* Give an Item Modal */}
-      {isPostModalOpen && (
+      {isPostModalOpen && currentUser && (
         <PostItemModal
           currentUser={currentUser}
           onClose={() => setIsPostModalOpen(false)}
@@ -420,7 +475,7 @@ export function App() {
       )}
 
       {/* My Gifting Activity & Pickups Drawer */}
-      {isMyPickupsOpen && (
+      {isMyPickupsOpen && currentUser && (
         <MyPickupsDrawer
           currentUser={currentUser}
           items={items}
@@ -431,14 +486,15 @@ export function App() {
       )}
 
       {/* User Profile & Safety Modal */}
-      {isProfileOpen && (
+      {isProfileOpen && currentUser && (
         <UserProfileModal
           currentUser={currentUser}
           allUsers={allUsers}
           onClose={() => setIsProfileOpen(false)}
           onUpdateUser={handleUpdateUser}
-          onSelectUser={setCurrentUser}
+          onSelectUser={handleSelectUser}
           onOpenNewProfileModal={() => setIsNewProfileOpen(true)}
+          onLogout={handleLogout}
         />
       )}
 
@@ -447,6 +503,23 @@ export function App() {
         <NewProfileModal
           onClose={() => setIsNewProfileOpen(false)}
           onCreateUser={handleCreateUser}
+        />
+      )}
+
+      {/* Sign In / Neighbor Login Modal */}
+      {isLoginOpen && (
+        <LoginModal
+          allUsers={allUsers}
+          onClose={() => {
+            setIsLoginOpen(false);
+            setLoginMessage(undefined);
+          }}
+          onSelectUser={handleSelectUser}
+          onOpenNewProfileModal={() => {
+            setIsLoginOpen(false);
+            setIsNewProfileOpen(true);
+          }}
+          message={loginMessage}
         />
       )}
     </div>

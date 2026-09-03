@@ -8,6 +8,7 @@ import {
   Bell,
   Check,
   Lock,
+  LogOut,
 } from 'lucide-react';
 
 interface UserProfileModalProps {
@@ -17,6 +18,7 @@ interface UserProfileModalProps {
   onUpdateUser: (updatedUser: User) => void;
   onSelectUser: (user: User) => void;
   onOpenNewProfileModal: () => void;
+  onLogout: () => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
@@ -26,6 +28,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   onUpdateUser,
   onSelectUser,
   onOpenNewProfileModal,
+  onLogout,
 }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'switch'>('profile');
   const [streetAddress, setStreetAddress] = useState(
@@ -193,6 +196,20 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
                 <strong>Why verification matters:</strong> In Buy Nothing groups, people give items from their homes. Phone verification and neighborhood boundary checks prevent spammers and build real-world neighbor trust.
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onLogout();
+                    onClose();
+                  }}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out of Profile</span>
+                </button>
               </div>
             </div>
           )}

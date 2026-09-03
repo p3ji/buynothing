@@ -15,7 +15,7 @@ import {
 
 interface ItemModalProps {
   item: Item;
-  currentUser: User;
+  currentUser: User | null;
   onClose: () => void;
   onRequestItem: (itemId: string, proposedTime: string, note: string) => void;
   onSelectRequester: (itemId: string, requesterId: string) => void;
@@ -23,6 +23,7 @@ interface ItemModalProps {
   onMarkPickedUp: (itemId: string) => void;
   onReopenItem: (itemId: string) => void;
   onOpenChat: (item: Item) => void;
+  onOpenLoginModal: (message?: string) => void;
 }
 
 const PICKUP_TIME_PRESETS = [
@@ -42,10 +43,11 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   onMarkPickedUp,
   onReopenItem,
   onOpenChat,
+  onOpenLoginModal,
 }) => {
-  const isGiver = item.giverId === currentUser.id;
-  const existingRequest = item.requests.find((r) => r.userId === currentUser.id);
-  const isSelected = item.selectedRequesterId === currentUser.id;
+  const isGiver = currentUser ? item.giverId === currentUser.id : false;
+  const existingRequest = currentUser ? item.requests.find((r) => r.userId === currentUser.id) : undefined;
+  const isSelected = currentUser ? item.selectedRequesterId === currentUser.id : false;
   const selectedRequester = item.requests.find((r) => r.userId === item.selectedRequesterId);
 
   // Form states for requesting
@@ -61,7 +63,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   const [fbCopied, setFbCopied] = useState(false);
 
   const handlePostToFacebook = async () => {
-    await WhatsAppService.copyAndOpenFacebookGroup(item, currentUser.facebookGroupUrl);
+    await WhatsAppService.copyAndOpenFacebookGroup(item, currentUser?.facebookGroupUrl);
     setFbCopied(true);
     setTimeout(() => setFbCopied(false), 3500);
   };
@@ -392,7 +394,40 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               ======================================================== */}
           {!isGiver && (
             <div className="border-t border-slate-200 pt-5">
-              {item.status === 'picked_up' ? (
+              {!currentUser ? (
+                /* Guest View: Can view everything, but must sign in or join to request */
+                <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-700">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">Sign in to request this item</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
+                      You can browse all items freely, but contacting {item.giverName.split(' ')[0]} and requesting pickup requires a verified neighbor account.
+                    </p>
+                  </div>
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+                    <button
+                      onClick={() =>
+                        onOpenLoginModal(
+                          `Sign in to message ${item.giverName.split(' ')[0]} and request "${item.title}".`
+                        )
+                      }
+                      className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      Sign In / Join to Request
+                    </button>
+                    <a
+                      href={WhatsAppService.getDirectClaimUrl(item, 'Today')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-4 py-2.5 bg-white border border-emerald-300 text-emerald-800 font-semibold text-xs rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      Or Claim via WhatsApp
+                    </a>
+                  </div>
+                </div>
+              ) : item.status === 'picked_up' ? (
                 <div className="text-center py-6 bg-slate-50 rounded-2xl">
                   <CheckCircle2 className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-slate-800">This item has been picked up</p>
