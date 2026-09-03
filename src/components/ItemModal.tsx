@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Item, User } from '../types';
+import { WhatsAppService } from '../services/whatsappService';
 import {
   X,
   MapPin,
@@ -140,6 +141,31 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                   <span className="text-xs font-medium text-slate-700">{item.createdAt}</span>
                 </div>
               </div>
+
+              {/* Cross-platform Broadcast to WhatsApp & Facebook */}
+              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <span className="text-[11px] font-medium text-slate-500">Cross-post to:</span>
+                <div className="flex items-center gap-1.5">
+                  <a
+                    href={WhatsAppService.getGroupShareUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
+                    title="Share listing to WhatsApp group"
+                  >
+                    <span>WhatsApp</span>
+                  </a>
+                  <a
+                    href={WhatsAppService.getFacebookShareUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
+                    title="Share listing to Facebook Group"
+                  >
+                    <span>Facebook</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -259,12 +285,29 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                                 <span className="text-slate-500 italic">Not sent yet</span>
                               )}
                             </div>
-                            <button
-                              onClick={() => setShowAddressForm(!showAddressForm)}
-                              className="font-semibold text-emerald-700 hover:text-emerald-900 underline"
-                            >
-                              {item.pickupDetails ? 'Edit / Resend' : 'Send Pickup Address'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {item.pickupDetails && (
+                                <a
+                                  href={WhatsAppService.getSendPorchAddressUrl(
+                                    item,
+                                    item.pickupDetails.address,
+                                    item.pickupDetails.instructions || ''
+                                  )}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] font-semibold text-emerald-800 bg-emerald-100/80 hover:bg-emerald-200 px-2 py-1 rounded-md transition-colors"
+                                  title="Send address directly to neighbor's WhatsApp"
+                                >
+                                  Send via WhatsApp
+                                </a>
+                              )}
+                              <button
+                                onClick={() => setShowAddressForm(!showAddressForm)}
+                                className="font-semibold text-emerald-700 hover:text-emerald-900 underline"
+                              >
+                                {item.pickupDetails ? 'Edit' : 'Send Address'}
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -441,13 +484,24 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>I'd love to pick this up</span>
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      type="submit"
+                      className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Request Item</span>
+                    </button>
+
+                    <a
+                      href={WhatsAppService.getDirectClaimUrl(item, proposedTime)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>Or Claim directly via WhatsApp</span>
+                    </a>
+                  </div>
                 </form>
               )}
             </div>

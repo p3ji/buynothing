@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Item, User } from '../types';
+import { WhatsAppService } from '../services/whatsappService';
 import {
   X,
   Send,
@@ -75,12 +76,23 @@ export const DirectMessageSheet: React.FC<DirectMessageSheetProps> = ({
             </div>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <a
+            href={WhatsAppService.getDirectClaimUrl(item, 'pickup coordination')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-2 py-1 rounded-lg transition-colors"
+            title="Continue this chat in WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Giver Fast Action Ribbon */}
